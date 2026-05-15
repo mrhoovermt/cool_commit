@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contribution Graph Preview</title>
+<style>
+  body {
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 20px;
+  }
+  h1 { font-size: 18px; font-weight: 400; margin-bottom: 30px; }
+  .year-section { margin-bottom: 24px; }
+  .year-label { font-size: 13px; color: #8b949e; margin-bottom: 6px; }
+  .graph {
+    display: inline-grid;
+    grid-template-rows: repeat(7, 11px);
+    grid-auto-flow: column;
+    gap: 3px;
+  }
+  .cell {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    background: #161b22;
+  }
+  .cell.on { background: #39d353; }
+  .day-labels {
+    display: inline-grid;
+    grid-template-rows: repeat(7, 11px);
+    gap: 3px;
+    margin-right: 6px;
+    vertical-align: top;
+    font-size: 10px;
+    color: #8b949e;
+  }
+  .day-labels span { display: flex; align-items: center; height: 11px; }
+</style>
+</head>
+<body>
+<h1>GitHub Contribution Graph Preview &mdash; mrhoovermt</h1>
+<div id="graphs"></div>
+<script>
+const FONT = {
+  A: ["01110","10001","10001","11111","10001","10001","10001"],
+  B: ["11110","10001","10001","11110","10001","10001","11110"],
+  D: ["11100","10010","10001","10001","10001","10010","11100"],
+  E: ["11111","10000","10000","11110","10000","10000","11111"],
+  H: ["10001","10001","10001","11111","10001","10001","10001"],
+  I: ["11111","00100","00100","00100","00100","00100","11111"],
+  K: ["10010","10100","11000","11000","10100","10010","10001"],
+  L: ["10000","10000","10000","10000","10000","10000","11111"],
+  N: ["10001","11001","10101","10101","10011","10001","10001"],
+  O: ["01110","10001","10001","10001","10001","10001","01110"],
+  P: ["11110","10001","10001","11110","10000","10000","10000"],
+  R: ["11110","10001","10001","11110","10100","10010","10001"],
+  S: ["01110","10001","10000","01110","00001","10001","01110"],
+  T: ["11111","00100","00100","00100","00100","00100","00100"],
+  W: ["10001","10001","10001","10101","10101","11011","10001"],
+};
+
+const YEAR_TEXT = {
+  2016: "POWER", 2017: "TO", 2018: "THE", 2019: "PEOPLE",
+  2020: "ALIENS", 2021: "ARE", 2022: "REAL", 2023: "BE KIND",
+  2024: "TO", 2025: "OTHERS"
+};
+
+function textToGrid(text, cols) {
+  const grid = Array.from({length: 7}, () => Array(cols).fill(0));
+  const LW = 5, SP = 1, SW = 3;
+  let tw = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === ' ') { tw += SW; }
+    else { tw += LW; if (i < text.length - 1 && text[i+1] !== ' ') tw += SP; }
+  }
+  let col = Math.floor((cols - tw) / 2);
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === ' ') { col += SW; continue; }
+    const g = FONT[ch];
+    if (!g) { col += LW + SP; continue; }
+    for (let r = 0; r < 7; r++)
+      for (let c = 0; c < LW; c++)
+        if (col + c >= 0 && col + c < cols && g[r][c] === '1') grid[r][col + c] = 1;
+    col += LW;
+    if (i < text.length - 1 && text[i+1] !== ' ') col += SP;
+  }
+  return grid;
+}
+
+const container = document.getElementById('graphs');
+const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+for (let year = 2016; year <= 2025; year++) {
+  const text = YEAR_TEXT[year];
+  if (!text) continue;
+  const cols = 52;
+  const grid = textToGrid(text, cols);
+
+  const section = document.createElement('div');
+  section.className = 'year-section';
+
+  const label = document.createElement('div');
+  label.className = 'year-label';
+  label.textContent = year;
+  section.appendChild(label);
+
+  const row = document.createElement('div');
+  row.style.display = 'flex';
+  row.style.alignItems = 'flex-start';
+
+  const dl = document.createElement('div');
+  dl.className = 'day-labels';
+  days.forEach(d => { const s = document.createElement('span'); s.textContent = d; dl.appendChild(s); });
+  row.appendChild(dl);
+
+  const g = document.createElement('div');
+  g.className = 'graph';
+  for (let c = 0; c < cols; c++)
+    for (let r = 0; r < 7; r++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell' + (grid[r][c] ? ' on' : '');
+      g.appendChild(cell);
+    }
+  row.appendChild(g);
+  section.appendChild(row);
+  container.appendChild(section);
+}
+</script>
+</body>
+</html>
